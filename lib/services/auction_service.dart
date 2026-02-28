@@ -22,6 +22,7 @@ class AuctionService extends ChangeNotifier {
   Team? _activeBidder;
   double _currentBid = 0;
   bool _isLoading = true;
+  String? _errorMessage;
 
   StreamSubscription? _playerSub;
   StreamSubscription? _teamSub;
@@ -34,6 +35,8 @@ class AuctionService extends ChangeNotifier {
   Team? get activeBidder => _activeBidder;
   double get currentBid => _currentBid;
   bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
+  bool get hasError => _errorMessage != null;
 
   double get increment => BiddingUtils.getIncrement(_currentBid);
   double get decrement => BiddingUtils.getDecrement(_currentBid);
@@ -46,12 +49,22 @@ class AuctionService extends ChangeNotifier {
     await _teamSub?.cancel();
 
     _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
 
-    // Initial data fetch
-    _allPlayers = await _playerRepo.fetchAll();
-    _availablePlayers = _allPlayers.where((p) => p.isAvailable).toList();
-    _teams = await _teamRepo.fetchAll();
+    try {
+      // Initial data fetch
+      _allPlayers = await _playerRepo.fetchAll();
+      _availablePlayers = _allPlayers.where((p) => p.isAvailable).toList();
+      _teams = await _teamRepo.fetchAll();
+    } catch (e) {
+      debugPrint('[AuctionService] Init fetch failed: $e');
+      _errorMessage =
+          'Could not connect to server. This may be a temporary issue — please check your connection and try again.';
+      _isLoading = false;
+      notifyListeners();
+      return;
+    }
 
     _isLoading = false;
     notifyListeners();
@@ -94,11 +107,19 @@ class AuctionService extends ChangeNotifier {
 
   /// Force refresh all data from Supabase (manual fallback).
   Future<void> refreshAll() async {
-    _allPlayers = await _playerRepo.fetchAll();
-    _rebuildAvailablePlayers();
-    _teams = await _teamRepo.fetchAll();
-    notifyListeners();
-    debugPrint('[AuctionService] Manual refresh complete');
+    try {
+      _allPlayers = await _playerRepo.fetchAll();
+      _rebuildAvailablePlayers();
+      _teams = await _teamRepo.fetchAll();
+      _errorMessage = null;
+      notifyListeners();
+      debugPrint('[AuctionService] Manual refresh complete');
+    } catch (e) {
+      debugPrint('[AuctionService] Refresh failed: $e');
+      _errorMessage =
+          'Refresh failed. The server may be temporarily unavailable — please try again shortly.';
+      notifyListeners();
+    }
   }
 
   // ── Player Selection ──────────────────────────────────────

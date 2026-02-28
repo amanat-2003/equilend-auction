@@ -39,6 +39,50 @@ class _AuctionScreenState extends State<AuctionScreen> {
               child: CircularProgressIndicator(color: ThemeConfig.gold),
             );
           }
+          if (auction.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.cloud_off,
+                      size: 64,
+                      color: ThemeConfig.gold,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Connection Error',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.headlineSmall?.copyWith(color: Colors.white),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      auction.errorMessage!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.white70),
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Retry'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: ThemeConfig.gold,
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 14,
+                        ),
+                      ),
+                      onPressed: () => auction.init(),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
           return LayoutBuilder(
             builder: (context, constraints) {
               // Responsive breakpoint
