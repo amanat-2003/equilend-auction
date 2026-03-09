@@ -7,6 +7,7 @@ class BiddingControls extends StatelessWidget {
   final double currentBid;
   final bool hasPlayer;
   final bool hasActiveBidder;
+  final bool canIncrement;
   final VoidCallback onIncrement;
   final VoidCallback onDecrement;
   final VoidCallback onSold;
@@ -16,6 +17,7 @@ class BiddingControls extends StatelessWidget {
     required this.currentBid,
     required this.hasPlayer,
     required this.hasActiveBidder,
+    this.canIncrement = true,
     required this.onIncrement,
     required this.onDecrement,
     required this.onSold,
@@ -64,7 +66,7 @@ class BiddingControls extends StatelessWidget {
                 icon: Icons.add,
                 label: '+ ${BiddingUtils.formatPrice(inc)}',
                 color: ThemeConfig.neonGreen,
-                enabled: hasPlayer,
+                enabled: hasPlayer && canIncrement,
                 onTap: onIncrement,
               ),
             ],

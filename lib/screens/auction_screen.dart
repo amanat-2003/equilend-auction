@@ -170,6 +170,7 @@ class _AuctionScreenState extends State<AuctionScreen> {
                     currentBid: auction.currentBid,
                     hasPlayer: auction.currentPlayer != null,
                     hasActiveBidder: auction.activeBidder != null,
+                    canIncrement: auction.canIncrement,
                     onIncrement: () => auction.incrementBid(),
                     onDecrement: () => auction.decrementBid(),
                     onSold: () => _handleSold(auction),

@@ -9,7 +9,8 @@
 ///   1Cr        → 2Cr          : +20L (0.20)
 ///   2Cr        → 5Cr          : +50L (0.50)
 ///   5Cr        → 20Cr         : +1Cr (1.00)
-///   >20Cr                     : +2Cr (2.00)
+///   20Cr       → 50Cr         : +2Cr (2.00)
+///   >50Cr                     : +5Cr (5.00)
 class BiddingUtils {
   /// Returns the increment value for the given [currentBid].
   static double getIncrement(double currentBid) {
@@ -17,7 +18,8 @@ class BiddingUtils {
     if (currentBid < 2.0) return 0.20; // +20L
     if (currentBid < 5.0) return 0.50; // +50L
     if (currentBid < 20.0) return 1.0; // +1Cr
-    return 2.0; // +2Cr
+    if (currentBid < 50.0) return 2.0; // +2Cr
+    return 5.0; // +5Cr
   }
 
   /// Returns the decrement value for the given [currentBid].
@@ -28,7 +30,8 @@ class BiddingUtils {
     if (currentBid <= 2.0) return 0.20;
     if (currentBid <= 5.0) return 0.50;
     if (currentBid <= 20.0) return 1.0;
-    return 2.0;
+    if (currentBid <= 50.0) return 2.0;
+    return 5.0;
   }
 
   /// Formats a Crore-based double to a human-readable string.

@@ -24,6 +24,9 @@ class AuctionService extends ChangeNotifier {
   bool _isLoading = true;
   String? _errorMessage;
 
+  /// Round to 1 decimal place to avoid floating-point drift (e.g. 0.8999…).
+  static double _round1(double v) => (v * 10).round() / 10;
+
   StreamSubscription? _playerSub;
   StreamSubscription? _teamSub;
 
@@ -38,9 +41,12 @@ class AuctionService extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   bool get hasError => _errorMessage != null;
 
+  static const double maxBid = 100.0; // 100 Cr cap
+
   double get increment => BiddingUtils.getIncrement(_currentBid);
   double get decrement => BiddingUtils.getDecrement(_currentBid);
   String get formattedBid => BiddingUtils.formatPrice(_currentBid);
+  bool get canIncrement => _currentBid + increment <= maxBid;
 
   // ── Initialization ────────────────────────────────────────
   Future<void> init() async {
@@ -125,7 +131,7 @@ class AuctionService extends ChangeNotifier {
   // ── Player Selection ──────────────────────────────────────
   void selectPlayer(Player player) {
     _currentPlayer = player;
-    _currentBid = player.basePrice;
+    _currentBid = _round1(player.basePrice);
     _activeBidder = null;
     notifyListeners();
   }
@@ -158,7 +164,8 @@ class AuctionService extends ChangeNotifier {
   // ── Bidding Controls ──────────────────────────────────────
   void incrementBid() {
     if (_currentPlayer == null) return;
-    _currentBid += increment;
+    if (!canIncrement) return;
+    _currentBid = _round1(_currentBid + increment);
     notifyListeners();
   }
 
@@ -166,8 +173,8 @@ class AuctionService extends ChangeNotifier {
     if (_currentPlayer == null) return;
     final dec = decrement;
     if (dec <= 0) return;
-    final newBid = _currentBid - dec;
-    if (newBid < _currentPlayer!.basePrice) return;
+    final newBid = _round1(_currentBid - dec);
+    if (newBid < 0.4) return;
     _currentBid = newBid;
     notifyListeners();
   }
