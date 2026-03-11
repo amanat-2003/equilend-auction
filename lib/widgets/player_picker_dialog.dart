@@ -82,7 +82,7 @@ class _PlayerPickerDialogState extends State<PlayerPickerDialog> {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    'SELECT NEXT PLAYER',
+                    'SELECT PLAYER',
                     style: ThemeConfig.subHeading.copyWith(
                       color: ThemeConfig.gold,
                       fontSize: 16,

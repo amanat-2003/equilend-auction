@@ -268,12 +268,11 @@ class _AuctionScreenState extends State<AuctionScreen> {
       ),
       child: Row(
         children: [
-          // Title
-          const Icon(Icons.emoji_events, color: ThemeConfig.gold, size: 26),
-          const SizedBox(width: 10),
-          Text(
-            'EQUILEND AUCTION LEAGUE',
-            style: ThemeConfig.heading.copyWith(fontSize: 20),
+          // Logo
+          Image.asset(
+            'assets/images/equilend.png',
+            height: 32,
+            fit: BoxFit.contain,
           ),
           const Spacer(),
           // Available count
@@ -297,7 +296,7 @@ class _AuctionScreenState extends State<AuctionScreen> {
           ElevatedButton.icon(
             onPressed: () => _showPlayerPicker(auction),
             icon: const Icon(Icons.person_add, size: 18),
-            label: const Text('NEXT PLAYER'),
+            label: const Text('SELECT PLAYER'),
             style: ElevatedButton.styleFrom(
               backgroundColor: ThemeConfig.gold,
               foregroundColor: ThemeConfig.scaffoldBg,
@@ -632,7 +631,9 @@ class _AuctionScreenState extends State<AuctionScreen> {
     // Use UrlSource for reliable web path resolution.
     final audioPlayer = AudioPlayer();
     audioPlayer.setReleaseMode(ReleaseMode.stop);
-    audioPlayer.play(UrlSource('assets/sounds/celebration.mp3')).catchError((_) {
+    audioPlayer.play(UrlSource('assets/sounds/celebration.mp3')).catchError((
+      _,
+    ) {
       // Sound is optional — don't fail if audio isn't available
       return null;
     });

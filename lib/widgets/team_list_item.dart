@@ -295,12 +295,15 @@ class _TeamListItemState extends State<TeamListItem> {
           // Budget bar
           Row(
             children: [
-              Text('Spent: ', style: ThemeConfig.label.copyWith(fontSize: 10)),
+              Text(
+                'Budget Left: ',
+                style: ThemeConfig.label.copyWith(fontSize: 10),
+              ),
               Expanded(
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
-                    value: widget.team.budgetUsage.clamp(0.0, 1.0),
+                    value: (1.0 - widget.team.budgetUsage).clamp(0.0, 1.0),
                     backgroundColor: ThemeConfig.white30.withAlpha(30),
                     color: _budgetColor(widget.team),
                     minHeight: 5,
@@ -309,7 +312,7 @@ class _TeamListItemState extends State<TeamListItem> {
               ),
               const SizedBox(width: 6),
               Text(
-                '${BiddingUtils.formatPrice(widget.team.pointsSpent)} / ${BiddingUtils.formatPrice(widget.team.totalPoints)}',
+                '${BiddingUtils.formatPrice(widget.team.pointsLeft)} / ${BiddingUtils.formatPrice(widget.team.totalPoints)}',
                 style: ThemeConfig.label.copyWith(fontSize: 10),
               ),
             ],
@@ -395,9 +398,9 @@ class _TeamListItemState extends State<TeamListItem> {
   }
 
   Color _budgetColor(Team t) {
-    final pct = t.budgetUsage;
-    if (pct > 0.85) return ThemeConfig.crimson;
-    if (pct > 0.6) return ThemeConfig.goldLight;
+    final pct = t.totalPoints > 0 ? t.pointsLeft / t.totalPoints : 0.0;
+    if (pct < 0.15) return ThemeConfig.crimson;
+    if (pct < 0.4) return ThemeConfig.goldLight;
     return ThemeConfig.neonGreen;
   }
 }

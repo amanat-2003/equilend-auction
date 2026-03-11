@@ -19,7 +19,7 @@ class EquilendAuctionApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => AuctionService(),
       child: MaterialApp(
-        title: 'Equilend Auction League',
+        title: 'Equilend Auction',
         debugShowCheckedModeBanner: false,
         theme: ThemeConfig.darkTheme,
         home: const AuctionScreen(),

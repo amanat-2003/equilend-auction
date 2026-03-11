@@ -144,7 +144,9 @@ class AuctionService extends ChangeNotifier {
 
   /// Randomly pick an available player from the given [tier].
   void selectRandomByTier(int tier) {
-    final candidates = _availablePlayers.where((p) => p.tier == tier).toList();
+    final candidates = _availablePlayers
+        .where((p) => p.tier == tier && p.id != _currentPlayer?.id)
+        .toList();
     if (candidates.isEmpty) return;
     candidates.shuffle();
     selectPlayer(candidates.first);
