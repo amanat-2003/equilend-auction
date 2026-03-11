@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../config/theme_config.dart';
 import '../models/player.dart';
@@ -186,7 +187,7 @@ class _PlayerPickerDialogState extends State<PlayerPickerDialog> {
                         return ListTile(
                           leading: CircleAvatar(
                             backgroundImage: p.photoUrl != null
-                                ? NetworkImage(p.photoUrl!)
+                                ? CachedNetworkImageProvider(p.photoUrl!)
                                 : null,
                             backgroundColor: ThemeConfig.surfaceColor,
                             child: p.photoUrl == null

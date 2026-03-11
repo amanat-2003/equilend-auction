@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../config/theme_config.dart';
 import '../models/player.dart';
@@ -17,42 +18,52 @@ class PlayerCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(28),
       decoration: ThemeConfig.glassCard(),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // ── Player Photo ──────────────────────────────────
+          // ── Player Photo (left) ───────────────────────────
           _buildAvatar(),
-          const SizedBox(height: 20),
+          const SizedBox(width: 28),
 
-          // ── Name ──────────────────────────────────────────
-          Text(
-            player!.name.toUpperCase(),
-            style: ThemeConfig.heading.copyWith(fontSize: 26),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 4),
+          // ── Info (right) ──────────────────────────────────
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Name ────────────────────────────────────
+                Text(
+                  player!.name.toUpperCase(),
+                  style: ThemeConfig.heading.copyWith(fontSize: 26),
+                ),
+                const SizedBox(height: 4),
 
-          // ── Department ────────────────────────────────────
-          if (player!.department != null)
-            Text(player!.department!, style: ThemeConfig.body),
-          const SizedBox(height: 16),
+                // ── Department ──────────────────────────────
+                if (player!.department != null)
+                  Text(player!.department!, style: ThemeConfig.body),
+                const SizedBox(height: 12),
 
-          // ── Tier Badge ────────────────────────────────────
-          _buildTierBadge(),
-          const SizedBox(height: 16),
+                // ── Tier Badge + Sports ─────────────────────
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [_buildTierBadge(), ..._buildSportsChips()],
+                ),
+                const SizedBox(height: 20),
 
-          // ── Sports Icons ──────────────────────────────────
-          _buildSportsTags(),
-          const SizedBox(height: 24),
-
-          // ── Price Row ─────────────────────────────────────
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _priceColumn('BASE PRICE', player!.basePrice),
-              Container(width: 1, height: 40, color: ThemeConfig.white30),
-              _priceColumn('CURRENT BID', currentBid, highlight: true),
-            ],
+                // ── Price Row ───────────────────────────────
+                Row(
+                  children: [
+                    _priceColumn('BASE PRICE', player!.basePrice),
+                    const SizedBox(width: 24),
+                    Container(width: 1, height: 40, color: ThemeConfig.white30),
+                    const SizedBox(width: 24),
+                    _priceColumn('CURRENT BID', currentBid, highlight: true),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -63,8 +74,8 @@ class PlayerCard extends StatelessWidget {
 
   Widget _buildAvatar() {
     return Container(
-      width: 120,
-      height: 120,
+      width: 240,
+      height: 240,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(color: ThemeConfig.gold, width: 3),
@@ -77,14 +88,14 @@ class PlayerCard extends StatelessWidget {
         ],
         image: player!.photoUrl != null
             ? DecorationImage(
-                image: NetworkImage(player!.photoUrl!),
+                image: CachedNetworkImageProvider(player!.photoUrl!),
                 fit: BoxFit.cover,
               )
             : null,
         color: ThemeConfig.cardColor,
       ),
       child: player!.photoUrl == null
-          ? const Icon(Icons.person, size: 56, color: ThemeConfig.white50)
+          ? const Icon(Icons.person, size: 72, color: ThemeConfig.white50)
           : null,
     );
   }
@@ -112,27 +123,20 @@ class PlayerCard extends StatelessWidget {
     );
   }
 
-  Widget _buildSportsTags() {
-    final sports = player!.sports;
-    if (sports.isEmpty) return const SizedBox.shrink();
-    return Wrap(
-      spacing: 8,
-      runSpacing: 6,
-      alignment: WrapAlignment.center,
-      children: sports.map((s) {
-        final icon = _sportIcon(s);
-        return Chip(
-          avatar: Icon(icon, size: 16, color: ThemeConfig.neonGreen),
-          label: Text(
-            s,
-            style: ThemeConfig.label.copyWith(color: ThemeConfig.white),
-          ),
-          backgroundColor: ThemeConfig.surfaceColor,
-          side: const BorderSide(color: ThemeConfig.white30),
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-        );
-      }).toList(),
-    );
+  List<Widget> _buildSportsChips() {
+    return player!.sports.map((s) {
+      final icon = _sportIcon(s);
+      return Chip(
+        avatar: Icon(icon, size: 16, color: ThemeConfig.neonGreen),
+        label: Text(
+          s,
+          style: ThemeConfig.label.copyWith(color: ThemeConfig.white),
+        ),
+        backgroundColor: ThemeConfig.surfaceColor,
+        side: const BorderSide(color: ThemeConfig.white30),
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+      );
+    }).toList();
   }
 
   IconData _sportIcon(String sport) {

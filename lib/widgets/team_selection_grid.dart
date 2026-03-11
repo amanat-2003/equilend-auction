@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../config/theme_config.dart';
 import '../models/team.dart';
@@ -93,7 +94,7 @@ class TeamSelectionGrid extends StatelessWidget {
                 ),
                 image: team.logoUrl != null
                     ? DecorationImage(
-                        image: NetworkImage(team.logoUrl!),
+                        image: CachedNetworkImageProvider(team.logoUrl!),
                         fit: BoxFit.cover,
                       )
                     : null,

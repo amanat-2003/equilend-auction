@@ -1,3 +1,4 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/theme_config.dart';
@@ -7,6 +8,7 @@ import '../widgets/bidding_controls.dart';
 import '../widgets/player_card.dart';
 import '../widgets/player_picker_dialog.dart';
 import '../widgets/team_list_item.dart';
+import '../widgets/sold_celebration_overlay.dart';
 import '../widgets/team_selection_grid.dart';
 
 /// Main auction screen — responsive split-view for web.
@@ -547,6 +549,12 @@ class _AuctionScreenState extends State<AuctionScreen> {
       return;
     }
 
+    // Capture sale details before confirmSale() clears them
+    final playerName = auction.currentPlayer!.name;
+    final teamName = auction.activeBidder!.teamName;
+    final captainName = auction.activeBidder!.captainName;
+    final formattedPrice = BiddingUtils.formatPrice(auction.currentBid);
+
     // Confirm dialog
     final confirm = await showDialog<bool>(
       context: context,
@@ -565,17 +573,11 @@ class _AuctionScreenState extends State<AuctionScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '${auction.currentPlayer!.name}',
-              style: ThemeConfig.subHeading,
-            ),
+            Text(playerName, style: ThemeConfig.subHeading),
             const SizedBox(height: 8),
+            Text('Sold to: $teamName', style: ThemeConfig.body),
             Text(
-              'Sold to: ${auction.activeBidder!.teamName}',
-              style: ThemeConfig.body,
-            ),
-            Text(
-              'Price: ${BiddingUtils.formatPrice(auction.currentBid)}',
+              'Price: $formattedPrice',
               style: ThemeConfig.body.copyWith(color: ThemeConfig.neonCyan),
             ),
             const SizedBox(height: 8),
@@ -601,16 +603,56 @@ class _AuctionScreenState extends State<AuctionScreen> {
     if (confirm == true) {
       final success = await auction.confirmSale();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(success ? 'Player SOLD!' : 'Sale failed.'),
-            backgroundColor: success
-                ? ThemeConfig.neonGreen
-                : ThemeConfig.crimson,
-          ),
-        );
+        if (success) {
+          _showCelebration(
+            playerName: playerName,
+            teamName: teamName,
+            captainName: captainName,
+            formattedPrice: formattedPrice,
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Sale failed.'),
+              backgroundColor: ThemeConfig.crimson,
+            ),
+          );
+        }
       }
     }
+  }
+
+  void _showCelebration({
+    required String playerName,
+    required String teamName,
+    required String captainName,
+    required String formattedPrice,
+  }) {
+    // Start audio here (closer to user gesture) to avoid browser autoplay blocks.
+    // Use UrlSource for reliable web path resolution.
+    final audioPlayer = AudioPlayer();
+    audioPlayer.setReleaseMode(ReleaseMode.stop);
+    audioPlayer.play(UrlSource('assets/sounds/celebration.mp3')).catchError((_) {
+      // Sound is optional — don't fail if audio isn't available
+      return null;
+    });
+
+    late OverlayEntry overlayEntry;
+    overlayEntry = OverlayEntry(
+      builder: (_) => SoldCelebrationOverlay(
+        playerName: playerName,
+        teamName: teamName,
+        captainName: captainName,
+        formattedPrice: formattedPrice,
+        audioPlayer: audioPlayer,
+        onDismiss: () {
+          audioPlayer.stop();
+          audioPlayer.dispose();
+          overlayEntry.remove();
+        },
+      ),
+    );
+    Overlay.of(context).insert(overlayEntry);
   }
 }
 

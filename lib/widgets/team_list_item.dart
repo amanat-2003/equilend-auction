@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../config/theme_config.dart';
 import '../models/player.dart';
@@ -180,7 +181,7 @@ class _TeamListItemState extends State<TeamListItem> {
         ),
         image: widget.team.logoUrl != null
             ? DecorationImage(
-                image: NetworkImage(widget.team.logoUrl!),
+                image: CachedNetworkImageProvider(widget.team.logoUrl!),
                 fit: BoxFit.cover,
               )
             : null,
@@ -214,7 +215,7 @@ class _TeamListItemState extends State<TeamListItem> {
         border: Border.all(color: ThemeConfig.white30, width: 0.8),
         image: hasCaptainPhoto
             ? DecorationImage(
-                image: NetworkImage(widget.team.captainPhoto!),
+                image: CachedNetworkImageProvider(widget.team.captainPhoto!),
                 fit: BoxFit.cover,
               )
             : null,
@@ -258,7 +259,9 @@ class _TeamListItemState extends State<TeamListItem> {
                   border: Border.all(color: ThemeConfig.gold.withAlpha(80)),
                   image: widget.team.captainPhoto != null
                       ? DecorationImage(
-                          image: NetworkImage(widget.team.captainPhoto!),
+                          image: CachedNetworkImageProvider(
+                            widget.team.captainPhoto!,
+                          ),
                           fit: BoxFit.cover,
                         )
                       : null,
@@ -346,7 +349,7 @@ class _TeamListItemState extends State<TeamListItem> {
                         color: ThemeConfig.surfaceColor,
                         image: p.photoUrl != null
                             ? DecorationImage(
-                                image: NetworkImage(p.photoUrl!),
+                                image: CachedNetworkImageProvider(p.photoUrl!),
                                 fit: BoxFit.cover,
                               )
                             : null,
