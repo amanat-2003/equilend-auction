@@ -55,19 +55,22 @@ class AuthRepository {
     );
   }
 
-  /// Redirect URL after OAuth — includes full path for GitHub Pages.
+  /// Redirect URL after OAuth — adapts to localhost or GitHub Pages.
   String get _redirectUrl {
-    // For web, construct full URL including base path (e.g., /equilend-auction/)
-    // Uri.base already includes the path, so we can use it directly
     final uri = Uri.base;
 
-    // If path is root ('/'), just return origin. Otherwise include the path.
+    // For localhost/127.0.0.1, return origin directly
+    if (uri.host.contains('localhost') || uri.host.contains('127.0.0.1')) {
+      return uri.origin;
+    }
+
+    // For GitHub Pages or production, include the base path
+    // If path is root ('/'), just return origin
     if (uri.path == '/' || uri.path.isEmpty) {
       return uri.origin;
     }
 
-    // For GitHub Pages subdirectories, return origin + base path
-    // E.g., https://amanat-2003.github.io/equilend-auction/
+    // For subdirectories like /equilend-auction/, include the full path
     final basePath =
         uri.path.split('/').where((s) => s.isNotEmpty).firstOrNull ?? '';
     return basePath.isNotEmpty ? '${uri.origin}/$basePath/' : uri.origin;
