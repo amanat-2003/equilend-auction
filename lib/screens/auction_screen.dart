@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/theme_config.dart';
 import '../services/auction_service.dart';
+import '../utils/web_audio_helper.dart';
 import '../services/auth_service.dart';
 import '../utils/bidding_utils.dart';
 import '../widgets/bidding_controls.dart';
@@ -602,7 +603,9 @@ class _AuctionScreenState extends State<AuctionScreen> {
     final captainName = auction.activeBidder!.captainName;
     final formattedPrice = BiddingUtils.formatPrice(auction.currentBid);
 
-    // Confirm dialog
+    // Confirm dialog.
+    // On web the CONFIRM button plays audio inside onPressed (user-gesture
+    // context) so the browser autoplay policy is satisfied.
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -640,7 +643,13 @@ class _AuctionScreenState extends State<AuctionScreen> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () {
+              // Fire audio in user-gesture context before async work.
+              if (WebAudioHelper.isWeb) {
+                WebAudioHelper.play('assets/sounds/celebration.mp3');
+              }
+              Navigator.pop(context, true);
+            },
             child: const Text('CONFIRM SOLD'),
           ),
         ],
@@ -675,16 +684,15 @@ class _AuctionScreenState extends State<AuctionScreen> {
     required String captainName,
     required String formattedPrice,
   }) {
-    // Start audio here (closer to user gesture) to avoid browser autoplay blocks.
-    // AssetSource prepends 'assets/' prefix on web, matching build/web/assets/assets/sounds/...
+    // On non-web: use audioplayers. On web: audio was already started in the
+    // CONFIRM button's onPressed to satisfy browser autoplay policy.
     final audioPlayer = AudioPlayer();
     audioPlayer.setReleaseMode(ReleaseMode.stop);
-    audioPlayer.play(AssetSource('assets/sounds/celebration.mp3')).catchError((
-      _,
-    ) {
-      // Sound is optional — don't fail if audio isn't available
-      return null;
-    });
+    if (!WebAudioHelper.isWeb) {
+      audioPlayer.play(AssetSource('assets/sounds/celebration.mp3')).catchError((
+        _,
+      ) => null);
+    }
 
     late OverlayEntry overlayEntry;
     overlayEntry = OverlayEntry(
