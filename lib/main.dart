@@ -3,7 +3,8 @@ import 'package:provider/provider.dart';
 import 'config/supabase_config.dart';
 import 'config/theme_config.dart';
 import 'services/auction_service.dart';
-import 'screens/auction_screen.dart';
+import 'services/auth_service.dart';
+import 'widgets/auth_gate.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,13 +17,16 @@ class EquilendAuctionApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => AuctionService(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthService()..init()),
+        ChangeNotifierProvider(create: (_) => AuctionService()),
+      ],
       child: MaterialApp(
         title: 'Equilend Auction',
         debugShowCheckedModeBanner: false,
         theme: ThemeConfig.darkTheme,
-        home: const AuctionScreen(),
+        home: const AuthGate(),
       ),
     );
   }

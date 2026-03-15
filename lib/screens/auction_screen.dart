@@ -3,13 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/theme_config.dart';
 import '../services/auction_service.dart';
+import '../services/auth_service.dart';
 import '../utils/bidding_utils.dart';
 import '../widgets/bidding_controls.dart';
 import '../widgets/player_card.dart';
 import '../widgets/player_picker_dialog.dart';
+import '../widgets/role_guard.dart';
 import '../widgets/team_list_item.dart';
 import '../widgets/sold_celebration_overlay.dart';
 import '../widgets/team_selection_grid.dart';
+import '../widgets/user_profile_button.dart';
 
 /// Main auction screen — responsive split-view for web.
 /// Left (70%): Active auction + controls.
@@ -144,6 +147,32 @@ class _AuctionScreenState extends State<AuctionScreen> {
         children: [
           // ── Header ──────────────────────────────────────────
           _buildHeader(auction),
+          // ── Viewer mode banner ──────────────────────────────
+          if (!context.read<AuthService>().isAdmin)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: ThemeConfig.neonCyan.withAlpha(15),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.visibility,
+                    size: 14,
+                    color: ThemeConfig.neonCyan,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'VIEWER MODE — Watch the auction live',
+                    style: ThemeConfig.label.copyWith(
+                      color: ThemeConfig.neonCyan,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           const SizedBox(height: 8),
           // ── Scrollable Body ─────────────────────────────────
           Expanded(
@@ -158,24 +187,28 @@ class _AuctionScreenState extends State<AuctionScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Team Selection Grid
+                  // Team Selection Grid (admin-only interaction)
                   if (auction.currentPlayer != null)
-                    TeamSelectionGrid(
-                      teams: auction.teams,
-                      activeBidderId: auction.activeBidder?.teamId,
-                      onTeamSelected: (team) => auction.setActiveBidder(team),
+                    AdminAction(
+                      child: TeamSelectionGrid(
+                        teams: auction.teams,
+                        activeBidderId: auction.activeBidder?.teamId,
+                        onTeamSelected: (team) => auction.setActiveBidder(team),
+                      ),
                     ),
                   const SizedBox(height: 20),
 
-                  // Bidding Controls
-                  BiddingControls(
-                    currentBid: auction.currentBid,
-                    hasPlayer: auction.currentPlayer != null,
-                    hasActiveBidder: auction.activeBidder != null,
-                    canIncrement: auction.canIncrement,
-                    onIncrement: () => auction.incrementBid(),
-                    onDecrement: () => auction.decrementBid(),
-                    onSold: () => _handleSold(auction),
+                  // Bidding Controls (admin-only)
+                  AdminAction(
+                    child: BiddingControls(
+                      currentBid: auction.currentBid,
+                      hasPlayer: auction.currentPlayer != null,
+                      hasActiveBidder: auction.activeBidder != null,
+                      canIncrement: auction.canIncrement,
+                      onIncrement: () => auction.incrementBid(),
+                      onDecrement: () => auction.decrementBid(),
+                      onSold: () => _handleSold(auction),
+                    ),
                   ),
                   const SizedBox(height: 24),
                 ],
@@ -292,59 +325,69 @@ class _AuctionScreenState extends State<AuctionScreen> {
             ),
           ),
           const SizedBox(width: 12),
-          // Pick next player
-          ElevatedButton.icon(
-            onPressed: () => _showPlayerPicker(auction),
-            icon: const Icon(Icons.person_add, size: 18),
-            label: const Text('SELECT PLAYER'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: ThemeConfig.gold,
-              foregroundColor: ThemeConfig.scaffoldBg,
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              textStyle: const TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
+          // Pick next player (admin-only)
+          AdminOnly(
+            child: ElevatedButton.icon(
+              onPressed: () => _showPlayerPicker(auction),
+              icon: const Icon(Icons.person_add, size: 18),
+              label: const Text('SELECT PLAYER'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: ThemeConfig.gold,
+                foregroundColor: ThemeConfig.scaffoldBg,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 12,
+                ),
+                textStyle: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),
           const SizedBox(width: 8),
-          // Random player by tier
-          PopupMenuButton<int>(
-            icon: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                color: ThemeConfig.neonCyan.withAlpha(20),
-                border: Border.all(color: ThemeConfig.neonCyan.withAlpha(80)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.shuffle,
-                    size: 16,
-                    color: ThemeConfig.neonCyan,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'RANDOM',
-                    style: ThemeConfig.label.copyWith(
+          // Random player by tier (admin-only)
+          AdminOnly(
+            child: PopupMenuButton<int>(
+              icon: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color: ThemeConfig.neonCyan.withAlpha(20),
+                  border: Border.all(color: ThemeConfig.neonCyan.withAlpha(80)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.shuffle,
+                      size: 16,
                       color: ThemeConfig.neonCyan,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 11,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 6),
+                    Text(
+                      'RANDOM',
+                      style: ThemeConfig.label.copyWith(
+                        color: ThemeConfig.neonCyan,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              color: ThemeConfig.cardColor,
+              onSelected: (tier) => auction.selectRandomByTier(tier),
+              itemBuilder: (_) => [
+                _tierMenuItem(1, 'Tier 1 — Star', ThemeConfig.gold),
+                _tierMenuItem(2, 'Tier 2 — Mid', ThemeConfig.neonCyan),
+                _tierMenuItem(3, 'Tier 3 — Base', ThemeConfig.white50),
+              ],
             ),
-            color: ThemeConfig.cardColor,
-            onSelected: (tier) => auction.selectRandomByTier(tier),
-            itemBuilder: (_) => [
-              _tierMenuItem(1, 'Tier 1 — Star', ThemeConfig.gold),
-              _tierMenuItem(2, 'Tier 2 — Mid', ThemeConfig.neonCyan),
-              _tierMenuItem(3, 'Tier 3 — Base', ThemeConfig.white50),
-            ],
           ),
           const SizedBox(width: 8),
           // Manual refresh button
@@ -368,16 +411,21 @@ class _AuctionScreenState extends State<AuctionScreen> {
               size: 20,
             ),
           ),
-          // Restart Auction button
-          IconButton(
-            onPressed: () => _handleResetAuction(auction),
-            tooltip: 'Restart Auction',
-            icon: const Icon(
-              Icons.restart_alt,
-              color: ThemeConfig.crimson,
-              size: 22,
+          // Restart Auction button (admin-only)
+          AdminOnly(
+            child: IconButton(
+              onPressed: () => _handleResetAuction(auction),
+              tooltip: 'Restart Auction',
+              icon: const Icon(
+                Icons.restart_alt,
+                color: ThemeConfig.crimson,
+                size: 22,
+              ),
             ),
           ),
+          const SizedBox(width: 8),
+          // User profile & sign-out
+          const UserProfileButton(),
         ],
       ),
     );
