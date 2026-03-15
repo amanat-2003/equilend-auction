@@ -689,9 +689,9 @@ class _AuctionScreenState extends State<AuctionScreen> {
     final audioPlayer = AudioPlayer();
     audioPlayer.setReleaseMode(ReleaseMode.stop);
     if (!WebAudioHelper.isWeb) {
-      audioPlayer.play(AssetSource('assets/sounds/celebration.mp3')).catchError((
-        _,
-      ) => null);
+      audioPlayer
+          .play(AssetSource('assets/sounds/celebration.mp3'))
+          .catchError((_) => null);
     }
 
     late OverlayEntry overlayEntry;
