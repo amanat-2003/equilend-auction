@@ -676,10 +676,10 @@ class _AuctionScreenState extends State<AuctionScreen> {
     required String formattedPrice,
   }) {
     // Start audio here (closer to user gesture) to avoid browser autoplay blocks.
-    // Use UrlSource for reliable web path resolution.
+    // AssetSource prepends 'assets/' prefix on web, matching build/web/assets/assets/sounds/...
     final audioPlayer = AudioPlayer();
     audioPlayer.setReleaseMode(ReleaseMode.stop);
-    audioPlayer.play(UrlSource('assets/sounds/celebration.mp3')).catchError((
+    audioPlayer.play(AssetSource('assets/sounds/celebration.mp3')).catchError((
       _,
     ) {
       // Sound is optional — don't fail if audio isn't available
